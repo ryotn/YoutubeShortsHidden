@@ -25,9 +25,10 @@ function hiddenShorts() {
     videoGrids.forEach(function (gridElement) {
         let videoTime = gridElement.querySelector('span.style-scope.ytd-thumbnail-overlay-time-status-renderer');
         if (videoTime == undefined) {
-            //console.log("videoTime == undefined gridElement:" + gridElement.innerText);
-            let badge = gridElement.querySelector('span.style-scope.ytd-badge-supported-renderer');
-            if (badge != undefined && badge.innerText.trim() == "プレミア公開中") gridElement.classList.add("notShortVideo");
+            console.log("videoTime == undefined gridElement:" + gridElement.innerText);
+            let badge = gridElement.querySelector('ytd-badge-supported-renderer#video-badges.style-scope.ytd-grid-video-renderer');
+            console.log(badge);
+            if (badge != undefined && (badge.innerText.trim() == "プレミア公開中" || badge.innerText.trim() == "ライブ配信中")) gridElement.classList.add("notShortVideo");
             return;
         }
 
@@ -41,7 +42,7 @@ function hiddenShorts() {
             time = splitTime[0] * 60 * 60;
             time += splitTime[1] * 60;
             time += splitTime[2] * 1;
-        } else if (strTime == "プレミア公開") {
+        } else if (strTime == "プレミア公開" || strTime == "ライブ") {
             //gridElement.classList.add("premiereVideo");
             let strPublishingTime = gridElement.querySelector('div#metadata-line').innerText.trim().slice(0, -7);
             let diffPublishingTime = new Date(strPublishingTime + ":00").getTime() - new Date().getTime();
