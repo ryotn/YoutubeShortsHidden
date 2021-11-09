@@ -6,6 +6,7 @@ let subscriptions = null;
 let pageManagerObserver = null;
 let subscriptionsObserver = null;
 let contentsObserver = null;
+let guideInnerContentObserver = null;
 let hiddenShortsTimer = null;
 
 function setHiddenShortsTimer() {
@@ -26,7 +27,7 @@ function hiddenShorts() {
         let videoTime = gridElement.querySelector('span.style-scope.ytd-thumbnail-overlay-time-status-renderer');
         if (videoTime == undefined) {
             console.log("videoTime == undefined gridElement:" + gridElement.innerText);
-            let badge = gridElement.querySelector('ytd-badge-supported-renderer#video-badges.style-scope.ytd-grid-video-renderer');
+            let badge = gridElement.querySelector('ytd-badge-supported-renderer#video-badges.style-scope.ytd-grid-video-renderer');//gridElement.querySelector('span.style-scope.ytd-badge-supported-renderer');
             console.log(badge);
             if (badge != undefined && (badge.innerText.trim() == "プレミア公開中" || badge.innerText.trim() == "ライブ配信中")) gridElement.classList.add("notShortVideo");
             return;
@@ -111,11 +112,15 @@ function restoreAll() {
 }
 
 window.addEventListener('load', function () {
+    setYoutubeShortsHidden();
+});
 
+function setYoutubeShortsHidden(){
+    console.log("setYoutubeShortsHidden")
+    setSubscriptionsLink();
     let newStyleElement = document.createElement("style");
     newStyleElement.innerHTML = ".hiddenShortVideo{display:none !important;}.hiddenPremiereVideo{display:none !important;}";
     document.head.appendChild(newStyleElement);
-
     pageManagerObserver = new MutationObserver(function () {
         if (contents == null && location.href == SUBSCRIPTIONS_URL) setSubscriptionsObserver();
     });
@@ -125,4 +130,29 @@ window.addEventListener('load', function () {
     window.addEventListener('scroll', function () {
         if (this.location.href == SUBSCRIPTIONS_URL && contents != null) setHiddenShortsTimer();
     });
-});
+}
+
+function setSubscriptionsLink(){
+    let guideInnerContent = document.getElementById('guide-inner-content');
+    guideInnerContentObserver = new MutationObserver(function(){
+        let items = document.querySelectorAll('#items.style-scope.ytd-guide-section-renderer');
+        items =  Array.from(items);
+        items.forEach(function(item){
+            let itemChildren = item.children;
+            itemChildren = Array.from(itemChildren);
+            itemChildren.forEach(function(itemChild){
+                if(itemChild.innerText == "登録チャンネル"){
+                    itemChild.querySelectorAll("a")[0].setAttribute("onclick","clickSubscriptions();");
+                    guideInnerContentObserver.disconnect();
+                }
+            });
+        });
+    });
+    guideInnerContentObserver.observe(guideInnerContent,{childList:true,subtree:true});
+}
+
+function clickSubscriptions(){
+    if(subscriptions != null && !subscriptions.hidden){
+        location.reload();
+    }
+}
