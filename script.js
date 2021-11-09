@@ -8,6 +8,8 @@ let subscriptionsObserver = null;
 let contentsObserver = null;
 let guideInnerContentObserver = null;
 let hiddenShortsTimer = null;
+var inputElement = null;
+var isHidden = true;
 
 function setHiddenShortsTimer() {
     if (hiddenShortsTimer != null) {
@@ -17,6 +19,7 @@ function setHiddenShortsTimer() {
 }
 
 function hiddenShorts() {
+    if(!isHidden) return;
     console.log('hiddenShorts');
 
     let videoGrids = contents.querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer:not(.notShortVideo):not(.hiddenShortVideo)');
@@ -68,6 +71,7 @@ function setSubscriptionsObserver() {
     pageManager.forEach(function (element) {
         if (element.getAttribute('page-subtype') == "subscriptions") {
             subscriptions = element;
+            createToggleSwitch();
             pageManagerObserver.disconnect();
 
             subscriptionsObserver = new MutationObserver(function () {
@@ -120,6 +124,7 @@ function setYoutubeShortsHidden(){
     setSubscriptionsLink();
     let newStyleElement = document.createElement("style");
     newStyleElement.innerHTML = ".hiddenShortVideo{display:none !important;}.hiddenPremiereVideo{display:none !important;}";
+    newStyleElement.innerHTML += toggleSwitchCSS;
     document.head.appendChild(newStyleElement);
     pageManagerObserver = new MutationObserver(function () {
         if (contents == null && location.href == SUBSCRIPTIONS_URL) setSubscriptionsObserver();
@@ -156,3 +161,120 @@ function clickSubscriptions(){
         location.reload();
     }
 }
+
+function createToggleSwitch(){
+    let dummyElement = document.createElement("div");
+    let divElement = document.createElement("div");
+    let labelElement = document.createElement("label");
+    inputElement = document.createElement("input");
+    let spanElement = document.createElement("span");
+
+    divElement.innerText = "Hidden Short Videos";
+
+    dummyElement.setAttribute('class','dummyDiv');
+    divElement.setAttribute('class','switchDiv');
+    labelElement.setAttribute('class','switch');
+    inputElement.setAttribute('type','checkbox');
+    inputElement.setAttribute('checked','true');
+    spanElement.setAttribute('class','slider round');
+
+    spanElement.addEventListener('click', function(){
+        console.log("inputElement.checked:" + inputElement.checked);
+        isHidden = !inputElement.checked;
+        if(isHidden){
+            hiddenShorts();
+        }else{
+            restoreAll();
+        }
+    });
+
+    //divElement.appendChild(labelElement);
+    labelElement.appendChild(inputElement);
+    labelElement.appendChild(spanElement);
+
+    subscriptions.prepend(dummyElement);
+    subscriptions.prepend(labelElement);
+    subscriptions.prepend(divElement);
+}
+
+let toggleSwitchCSS = `
+.dummyDiv{
+    width: 100%;
+    height: 45px;
+}
+.switchDiv{
+    position: fixed;
+    display: inline-block;
+    width: 100%;
+    height: 45px;
+    background-color: var(--yt-spec-general-background-a);
+    color: var(--yt-spec-text-primary);
+    text-align: center;
+    z-index:1000;
+}
+/* How To Create a Toggle Switch https://www.w3schools.com/howto/howto_css_switch.asp */
+/* The switch - the box around the slider */
+.switch {
+  position: fixed;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin-top: 11px;
+  z-index:1001;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+`;
